@@ -9,7 +9,6 @@ our $VERSION = '0.1';
 
 use DBI;
 use Digest::MD5 qw(md5_hex);
-use Data::Dumper;
 
 ###
 ## Database Variables
@@ -442,10 +441,10 @@ sub user_manager {
         my $status = $row->{status_id} || 2;
 
         if($status == 1){
-            $status = bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' );
+            $status = bless( do{\(my $o = 1)}, 'JSON::XS::Boolean' );
         }
         else{
-            $status = bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' );
+            $status = bless( do{\(my $o = 0)}, 'JSON::XS::Boolean' );
         }
 
         push @$result_array, { id             => $row->{id}, 
@@ -818,10 +817,10 @@ sub admin_grid {
                 my $status = $row->{status} || 2;
                 
                 if($status eq 1){
-                    $status = bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' );
+                    $status = bless( do{\(my $o = 1)}, 'JSON::XS::Boolean' );
                 }
                 else{
-                    $status = bless( do{\(my $o = 0)}, 'JSON::PP::Boolean' );
+                    $status = bless( do{\(my $o = 0)}, 'JSON::XS::Boolean' );
                 }
 
                 push @$result_array, { id             => $row->{id}, 
