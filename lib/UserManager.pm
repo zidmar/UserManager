@@ -27,19 +27,11 @@ my $db_hash = {
 ## Main
 ###############################################################################
 
-hook 'before' => sub {
-    if(!session('logged_in') && request->path_info !~ m{^/login}) {
-        if(request->path_info eq '/change_password'){
-        }
-        elsif(request->path_info eq '/password_reset'){
-        }
-        else{
-            return redirect '/login';
-        }
-    }
-};
-
 get '/' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
     my $header_hash = request->headers;
     my $static_uri  = '';
     my $main_uri    = '';
@@ -51,6 +43,9 @@ get '/' => sub {
 };
 
 get '/user_manager/:rid?' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
 
     my $header_hash = request->headers;
     my $hashref     = params;
@@ -64,18 +59,30 @@ get '/user_manager/:rid?' => sub {
 };
 
 put '/user_manager/:id' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
     my $body    = request->body;
     my $hashref = from_json($body);
     &modify_user($hashref);
 };
 
 post '/add' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
     my $hashref = params;
     my $result  = &add_user($hashref);
     return $result;
 };
 
 post '/modify_password' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
     my $hashref = params;
     my $result  = &modify_password($hashref);
     return $result;
@@ -84,6 +91,9 @@ post '/modify_password' => sub {
 ## Admin ######################################################################
 
 get '/admin_grid/:table_name' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
 
     my $header_hash = request->headers;
     my $table_name  = params->{table_name};
@@ -94,6 +104,10 @@ get '/admin_grid/:table_name' => sub {
 };
 
 put '/admin_grid/:table_name?/:second?' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
     my $body    = request->body;
     my $hashref = from_json($body);
     $hashref->{table_name} = params->{table_name};
@@ -101,6 +115,10 @@ put '/admin_grid/:table_name?/:second?' => sub {
 };
 
 post '/admin_add' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
     my $hashref = params;
     my $result  = &admin_add($hashref);
     return $result;
@@ -109,6 +127,9 @@ post '/admin_add' => sub {
 ## Selects ####################################################################
 
 get '/filtering_select/:input/:rid?' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
 
     my $input = param 'input';
     my $name  = params->{'name'} || undef;
