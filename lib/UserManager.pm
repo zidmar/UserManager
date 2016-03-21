@@ -9,6 +9,7 @@ our $VERSION = '0.1';
 
 use DBI;
 use Digest::MD5 qw(md5_hex);
+require JSON::XS;
 
 ###
 ## Database Variables
@@ -165,7 +166,7 @@ any ['get', 'post'] => '/login' => sub {
 
         if($username){
             if($password){
-               $output = &_db_authen_processLogin({username => $username, password => $password});
+               $output = &_db_authen_process_login({username => $username, password => $password});
             }
             else{
                 $err = "Invalid password";
@@ -1098,7 +1099,7 @@ sub _generate_random_string{
 
 ## Login
 
-sub _db_authen_processLogin {
+sub _db_authen_process_login {
     
 	my ($sub_hash) = @_;
     
@@ -1110,7 +1111,7 @@ sub _db_authen_processLogin {
                        login_message      => "User not authorized to login on this page." };
     
     if($username){
-        my $user_exists = &_db_authen_fetchUser({ username => $username });
+        my $user_exists = &_db_authen_fetch_user({ username => $username });
         if($user_exists->{id}){
             debug("User exists in DB");
             debug("Testing Authentication with DB");
@@ -1131,7 +1132,7 @@ sub _db_authen_processLogin {
     return $sub_output;
 }
 
-sub _db_authen_fetchUser {
+sub _db_authen_fetch_user {
 
     my ($sub_hash) = @_;
 
@@ -1139,17 +1140,43 @@ sub _db_authen_fetchUser {
     my $sth = {};
     my $sql = {};
 
-    $sql->{1} = qq(select user_manager_id,username,password,real_name,privilege_to_user_manager_id as privilege from user_manager where username = ?);
-    $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
-    $sth->{1}->execute($sub_hash->{username}) or error("Error in sth_1 execute");
-    my $sql_1_result = $sth->{1}->fetchrow_hashref;
+    my $result_hash = {};
 
-    my $result = { id        => $sql_1_result->{user_manager_id},
-                   password  => $sql_1_result->{password},
-                   fullname  => $sql_1_result->{real_name},
-                   privilege => $sql_1_result->{privilege} } || {};
+    if($sub_hash->{username}){
 
-    return $result;
+        $sql->{1} = qq(select user_manager_id,username,password,real_name,privilege_to_user_manager_id as privilege from user_manager where username = ?);
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
+        $sth->{1}->execute($sub_hash->{username}) or error("Error in sth_1 execute");
+        my $sql_1_result = $sth->{1}->fetchrow_hashref;
+
+        $result_hash = { id        => $sql_1_result->{user_manager_id},
+                         password  => $sql_1_result->{password},
+                         fullname  => $sql_1_result->{real_name},
+                         privilege => $sql_1_result->{privilege} };
+    }
+    elsif($sub_hash->{id}){
+
+        $sql->{1} = qq(select username,real_name from user_manager where user_manager_id = ?);
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
+        $sth->{1}->execute($sub_hash->{id}) or error("Error in sth_1 execute");
+        my $sql_1_result = $sth->{1}->fetchrow_hashref;
+
+        $result_hash = { username  => $sql_1_result->{username},
+                         fullname  => $sql_1_result->{real_name} };
+    }
+    else{
+
+        $sql->{1} = qq(select user_manager_id as id,username as description from user_manager);
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
+        $sth->{1}->execute() or error("Error in sth_1 execute");
+        my $sql_1_result = $sth->{1}->fetchall_arrayref({});
+
+        for my $row (@$sql_1_result){
+            $result_hash->{ $row->{id} } = $row->{description};
+        }
+    }
+
+    return $result_hash;
 }
 
 sub _db_change_password {
