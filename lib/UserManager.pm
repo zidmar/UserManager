@@ -1,7 +1,7 @@
 package UserManager;
 use Dancer2;
 
-our $VERSION = '0.1';
+our $VERSION = '0.2';
 
 ###
 ## Modules
@@ -123,6 +123,31 @@ post '/admin_add' => sub {
     my $hashref = params;
     my $result  = &admin_add($hashref);
     return $result;
+};
+
+## Role Manager ################################################################
+
+get '/role_manager/:user?' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
+    my $header_hash = request->headers;
+    my $user        = params->{user};
+
+    my $result = &role_manager({ content_range => $header_hash->{'x-range'}, user => $user });
+    header('Content-Range' => "$result->{content_range}/$result->{result_count}");
+    return $result->{json_output};
+};
+
+put '/role_manager/:id/:rid' => sub {
+
+    ## Check Session
+    if(!session('logged_in')){ redirect '/login'; }
+
+    my $body    = request->body;
+    my $hashref = from_json($body);
+    &modify_role($hashref);
 };
 
 ## Selects ####################################################################
@@ -319,37 +344,31 @@ sub user_manager {
 
     $sql->{1} = qq(select 
                     a.user_manager_id as id,
-                    a.created,
-                    a.updated,
+                    strftime('%Y-%m-%d',a.created) as created,
+                    strftime('%Y-%m-%d',a.updated) as updated,
                     a.username,
                     a.real_name,
                     a.status_to_user_manager_id as status_id,
                     b.description as status,
-                    a.privilege_to_user_manager_id as privilege_id,
-                    c.description as privilege,
-                    a.department_to_user_manager_id as department_id,
-                    d.description as department 
+                    c.description as department,
+                    a.department_to_user_manager_id as department_id
                    from
                     user_manager a,
                     status b,
-                    privilege c,
-                    department d
+                    department c
                    where
                     b.status_id = a.status_to_user_manager_id
-                    and c.privilege_id = a.privilege_to_user_manager_id
-                    and d.department_id = a.department_to_user_manager_id);
+                    and c.department_id = a.department_to_user_manager_id);
 
     $sql->{count} = qq(select 
                         count(a.user_manager_id)
                        from
                         user_manager a,
                         status b,
-                        privilege c,
-                        department d
+                        department c
                        where
                         b.status_id = a.status_to_user_manager_id
-                        and c.privilege_id = a.privilege_to_user_manager_id
-                        and d.department_id = a.department_to_user_manager_id);
+                        and c.department_id = a.department_to_user_manager_id);
 
     ## Search
     if($query){
@@ -364,7 +383,7 @@ sub user_manager {
     
             $where_query  = qq{ 
                 and (upper(a.username) like '%$query%'
-                or upper(f.real_name) like '%$query%')
+                or upper(a.real_name) like '%$query%')
             };
         }
             
@@ -460,15 +479,6 @@ sub user_manager {
 
     for my $row (@$sql_1_result){
 
-        my $status = $row->{status_id} || 2;
-
-        if($status == 1){
-            $status = bless( do{\(my $o = 1)}, 'JSON::XS::Boolean' );
-        }
-        else{
-            $status = bless( do{\(my $o = 0)}, 'JSON::XS::Boolean' );
-        }
-
         push @$result_array, { id             => $row->{id}, 
                                created        => $row->{created},
                                updated        => $row->{created},
@@ -476,11 +486,8 @@ sub user_manager {
                                real_name      => $row->{real_name},
                                status_id      => $row->{status_id},
                                status         => $row->{status},
-                               status_boolean => $status,
-                               privilege_id   => $row->{privilege_id},
-                               privilege      => $row->{privilege},
-                               department_id  => $row->{department_id},
-                               department     => $row->{department} };
+                               department     => $row->{department},
+                               department_id  => $row->{department_id} };
     }
 
     if(defined($rid)){
@@ -497,10 +504,24 @@ sub add_user {
 
     my ($sub_hash) = @_;
 
-    my $username   = $sub_hash->{username}   || undef;	
-    my $password   = &_generate_password();	
-    my $real_name  = $sub_hash->{real_name}  || $username;	
-    my $department = $sub_hash->{department} || 1;	
+    my $username      = $sub_hash->{username}   || undef;	
+    my $real_name     = $sub_hash->{real_name}  || $username;
+    my $department    = $sub_hash->{department} || 1;	
+    my $role_arrayref = from_json($sub_hash->{role});
+
+    my $role_hashref = {};
+
+    for my $row (@$role_arrayref){
+        $role_hashref->{ $row->{group} } = {status => $row->{status}, role => $row->{role} };
+    }
+
+    my $password         = $sub_hash->{password} || undef;
+    my $confirm_password = $sub_hash->{confirm_password};
+
+    if(!$password){
+        $password = &_generate_password();
+        $confirm_password = $password;
+    }
 
     my $dbh = &_db_handle($db_hash);
     my $sth = {};
@@ -512,24 +533,51 @@ sub add_user {
 
 		$sub_output = "Error addding user. Username already exists!";
 
-		$sql->{1} = qq(select user_manager_id from user_manager where username = ?);
-		$sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
-		$sth->{1}->execute($username) or error("Error in sth_1 execute");
-		my $sql_1_result = $sth->{1}->fetchrow_hashref;
+        $sql->{1} = qq(select user_manager_id from user_manager where username = ?);
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
+        $sth->{1}->execute($username) or error("Error in sth_1 execute");
+        my $sql_1_result = $sth->{1}->fetchrow_hashref;
 
-		if(!$sql_1_result->{user_manager_id}){
+        if(!$sql_1_result->{user_manager_id}){
 
-            $sql->{1} = "insert into user_manager (created,username,password,real_name,department_to_user_manager_id) values (" . &_now_to_use() . ",?,?,?,?)";
-            $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
-            $sth->{1}->execute($username,$password,$real_name,$department) or error("Error in sth_1 execute");
-            $sth->{1}->finish;
+            $sub_output = "Password and Confirm Password do not match!";
 
-            my $last_id = $dbh->last_insert_id(undef,undef,"user_manager",undef) || undef;
+            if($password eq $confirm_password){
 
-            if($last_id){
-                $sub_output = "Added entry successfully!";
+                $sql->{2} = "insert into user_manager (created,username,password,real_name,department_to_user_manager_id) values (" . &_now_to_use() . ",?,?,?,?)";
+                $sth->{2} = $dbh->prepare($sql->{2}) or error("Error in sth_2");
+                $sth->{2}->execute($username,$password,$real_name,$department) or error("Error in sth_2 execute");
+                $sth->{2}->finish;
+
+                my $last_id = $dbh->last_insert_id(undef,undef,"user_manager",undef) || undef;
+
+                if($last_id){
+
+                    $sub_output = "Added entry successfully!";
+
+                    ## Add roles
+                    $sql->{3} = qq(insert into role (user_manager_to_role_id,group_manager_to_role_id,privilege_to_role_id,status_to_role_id) values (?,?,?,?));
+                    $sth->{3} = $dbh->prepare($sql->{3}) or error("Error in sth_3");
+
+                    $sql->{4} = qq(select group_manager_id,description as group_name from group_manager);
+                    $sth->{4} = $dbh->prepare($sql->{4}) or error("Error in sth_4");
+                    $sth->{4}->execute() or error("Error in sth_4 execute");
+                    my $sql_4_result = $sth->{4}->fetchall_arrayref({});
+
+                    for my $row (@$sql_4_result){
+                        if( $role_hashref->{ $row->{group_name} } ){
+                            my $status = $role_hashref->{ $row->{group_name} }->{status};
+                            my $role   = $role_hashref->{ $row->{group_name} }->{role};
+                            $sth->{3}->execute($last_id,$row->{group_manager_id},$role,$status) or error("Error in sth_3 execute");
+                        }
+                        else{
+                            $sth->{3}->execute($last_id,$row->{group_manager_id},3,2) or error("Error in sth_3 execute");
+                        }
+                    }
+                    $sth->{3}->finish;
+                }
             }
-		}
+        }
 		$dbh->disconnect;
 	}
     return $sub_output;
@@ -592,29 +640,29 @@ sub modify_user {
         }
     }
 
-    ## privilege
+    ## status
     
-    if(defined($sub_hash->{privilege})){
+    if(defined($sub_hash->{status})){
 
-        $sql->{6} = qq(select privilege_id from privilege where description = ?);
+        $sql->{6} = qq(select status_id from status where description = ?);
         $sth->{6} = $dbh->prepare($sql->{6}) or error("Error in sth_6");
-        $sth->{6}->execute($sub_hash->{privilege}) or error("Error in sth_6");
+        $sth->{6}->execute($sub_hash->{status}) or error("Error in sth_6");
         my $sql_result_6 = $sth->{6}->fetchrow_hashref || {};
         $sth->{6}->finish;
 
-        if($sql_result_6->{privilege_id}){
+        if($sql_result_6->{status_id}){
 
-            $sql->{7} = qq(select privilege_to_user_manager_id from user_manager where user_manager_id = ?);
+            $sql->{7} = qq(select status_to_user_manager_id from user_manager where user_manager_id = ?);
             $sth->{7} = $dbh->prepare($sql->{7}) or error("Error in sth_7");
             $sth->{7}->execute($sub_hash->{id}) or error("Error in sth_7");
             my $sql_result_7 = $sth->{7}->fetchrow_hashref || {};
             $sth->{7}->finish;
 
-            if($sql_result_7->{privilege_to_user_manager_id}){
-                if($sql_result_7->{privilege_to_user_manager_id} ne $sub_hash->{privilege}){
-                    $sql->{8} = "update user_manager set updated = " . &_now_to_use() . ",privilege_to_user_manager_id = ? where user_manager_id = ?";
+            if($sql_result_7->{status_to_user_manager_id}){
+                if($sql_result_7->{status_to_user_manager_id} ne $sql_result_6->{status_id}){
+                    $sql->{8} = "update user_manager set updated = " . &_now_to_use() . ",status_to_user_manager_id = ? where user_manager_id = ?";
                     $sth->{8} = $dbh->prepare($sql->{8}) or error("Error in sth_8");
-                    $sth->{8}->execute($sql_result_6->{privilege_id},$sub_hash->{id}) or error("Error in sth_8");
+                    $sth->{8}->execute($sql_result_6->{status_id},$sub_hash->{id}) or error("Error in sth_8");
                     $sth->{8}->finish;
                 }
             }
@@ -640,7 +688,7 @@ sub modify_user {
             $sth->{10}->finish;
 
             if($sql_result_10->{department_to_user_manager_id}){
-                if($sql_result_10->{department_to_user_manager_id} ne $sub_hash->{department}){
+                if($sql_result_10->{department_to_user_manager_id} ne $sql_result_9->{department_id}){
                     $sql->{11} = "update user_manager set updated = " . &_now_to_use() . ",department_to_user_manager_id = ? where user_manager_id = ?";
                     $sth->{11} = $dbh->prepare($sql->{11}) or error("Error in sth_11");
                     $sth->{11}->execute($sql_result_9->{department_id},$sub_hash->{id}) or error("Error in sth_11");
@@ -650,29 +698,6 @@ sub modify_user {
         }
     }
 
-    ## status
-
-    if(defined($sub_hash->{status_boolean})){
-
-        my $status = $sub_hash->{status_boolean};
-
-        if($status != 1){
-            $status = 2;
-        }
-
-        $sql->{12} = qq(select status_to_user_manager_id as status_id from user_manager where user_manager_id = ?);
-        $sth->{12} = $dbh->prepare($sql->{12}) or error("Error in sth_12");
-        $sth->{12}->execute($sub_hash->{id}) or error("Error in sth_12");
-        my $sql_result_12 = $sth->{12}->fetchrow_hashref || {};
-        $sth->{12}->finish;
-
-        if($sql_result_12->{status_id} ne $status){
-            $sql->{13} = "update user_manager set updated = " . &_now_to_use() . ",status_to_user_manager_id = ? where user_manager_id = ?";
-            $sth->{13} = $dbh->prepare($sql->{13}) or error("Error in sth_13");
-            $sth->{13}->execute($status,$sub_hash->{id}) or error("Error in sth_13");
-            $sth->{13}->finish;
-        }
-    }
     $dbh->disconnect;
 }
 
@@ -919,10 +944,28 @@ sub admin_add {
                 $sth->{2}->execute($description) or error("Error in sth_2 execute");
                 $sth->{2}->finish;
 
-                my $current_host_id = $dbh->last_insert_id(undef,undef,$table,undef) || undef;
+                my $last_id = $dbh->last_insert_id(undef,undef,$table,undef) || undef;
 
-                if($current_host_id){
+                if($last_id){
                     $sub_output = "Added Description \"$description\" successfully!";
+
+                    ## Role
+                    if($table eq "group_manager"){
+
+                        ## Add roles
+                        $sql->{3} = qq(insert into role (user_manager_to_role_id,group_manager_to_role_id,privilege_to_role_id,status_to_role_id) values (?,?,?,?));
+                        $sth->{3} = $dbh->prepare($sql->{3}) or error("Error in sth_3");
+
+                        $sql->{4} = qq(select user_manager_id from user_manager);
+                        $sth->{4} = $dbh->prepare($sql->{4}) or error("Error in sth_4");
+                        $sth->{4}->execute() or error("Error in sth_4 execute");
+                        my $sql_4_result = $sth->{4}->fetchall_arrayref({});
+
+                        for my $row (@$sql_4_result){
+                            $sth->{3}->execute($row->{user_manager_id},$last_id,3,2) or error("Error in sth_3 execute");
+                        }
+                        $sth->{3}->finish;
+                    }
                 }
             }
             else{
@@ -1023,6 +1066,188 @@ sub modify_admin {
                     $sth->{6}->execute($status,$id) or error("Error in sth_6");
                     $sth->{6}->finish;
                 }
+            }
+        }
+    }
+    $dbh->disconnect;
+}
+
+sub role_manager {
+    
+    my ($sub_hash) = @_;
+    
+    my $content_range = $sub_hash->{content_range} || undef;
+    my $user          = $sub_hash->{user}          || undef;
+
+    my $dbh = &_db_handle($db_hash);
+    my $sql = {};
+    my $sth = {};
+
+    my $result_array = [];
+
+    ## Paging
+    my $limit        = "100";
+    my $offset       = "0";
+    my $result_count = "";
+
+    if( (defined($content_range)) && ($content_range =~ /items\=(\d+)\-(\d+)/) ){
+        my $start  = $1;
+        my $end    = $2;
+        $offset    = $start;
+        $content_range = "items " . $start . "-" . $end;
+    }
+
+    if($user){
+
+        $sql->{1} = qq(select
+                        a.role_id as id,
+                        a.status_to_role_id as status,
+                        b.description as group_name,
+                        c.description as privilege
+                       from
+                        role a,
+                        group_manager b,
+                        privilege c
+                       where
+                        b.group_manager_id = a.group_manager_to_role_id
+                        and c.privilege_id = a.privilege_to_role_id
+                        and b.status_to_group_manager_id = ?
+                        and a.user_manager_to_role_id = ?);
+
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
+        $sth->{1}->execute(1,$user) or error("Error in sth_1 execute");
+        my $sql_1_result = $sth->{1}->fetchall_arrayref({});
+        $sth->{1}->finish;
+
+        for my $row (@$sql_1_result){
+
+            my $status = $row->{status} || 2;
+            
+            if($status eq 1){
+                $status = bless( do{\(my $o = 1)}, 'JSON::XS::Boolean' );
+            }
+            else{
+                $status = bless( do{\(my $o = 0)}, 'JSON::XS::Boolean' );
+            }
+
+            push @$result_array, { id        => $row->{id}, 
+                                   group     => $row->{group_name},
+                                   privilege => $row->{privilege},
+                                   status    => $status };
+        }
+
+        $sql->{count} = qq(select
+                            count(a.role_id)
+                           from
+                            role a,
+                            group_manager b,
+                            privilege c
+                           where
+                            b.group_manager_id = a.group_manager_to_role_id
+                            and c.privilege_id = a.privilege_to_role_id
+                            and b.status_to_group_manager_id = ?
+                            and a.user_manager_to_role_id = ?);
+        $sth->{count} = $dbh->prepare($sql->{count}) or error("Error in sth_count");
+        $sth->{count}->execute(1,$user) or error("Error in sth_count");
+        my $sql_count_result = $sth->{count}->fetchrow_arrayref;
+        $sth->{count}->finish;
+        $result_count = $sql_count_result->[0];
+    }
+    else{
+
+        $sql->{1} = qq(select group_manager_id,description from group_manager where status_to_group_manager_id = ?);
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
+        $sth->{1}->execute(1) or error("Error in sth_1 execute");
+        my $sql_1_result = $sth->{1}->fetchall_arrayref({});
+        $sth->{1}->finish;
+
+        for my $row (@$sql_1_result){
+
+            my $status = $row->{status} || 2;
+            
+            if($status eq 1){
+                $status = bless( do{\(my $o = 1)}, 'JSON::XS::Boolean' );
+            }
+            else{
+                $status = bless( do{\(my $o = 0)}, 'JSON::XS::Boolean' );
+            }
+
+            push @$result_array, { id        => $row->{group_manager_id}, 
+                                   group     => $row->{description},
+                                   privilege => 3,
+                                   status    => bless( do{\(my $o = 0)}, 'JSON::XS::Boolean' ) };
+        }
+
+        $sql->{count} = qq(select count(group_manager_id) from group_manager where status_to_group_manager_id = ?);
+        $sth->{count} = $dbh->prepare($sql->{count}) or error("Error in sth_count");
+        $sth->{count}->execute(1) or error("Error in sth_count");
+        my $sql_count_result = $sth->{count}->fetchrow_arrayref;
+        $sth->{count}->finish;
+        $result_count = $sql_count_result->[0];
+    }
+
+    $dbh->disconnect;
+
+    return ({ json_output   => to_json($result_array, {utf8 => 0}),
+              content_range => $content_range,
+              result_count  => $result_count });
+}
+
+sub modify_role {
+
+    my ($sub_hash) = @_;
+
+    my $table_name  = $sub_hash->{table_name}  || undef;
+
+    my $id          = $sub_hash->{id}          || undef;
+    my $status      = $sub_hash->{status}      || 2;
+    my $privilege   = $sub_hash->{privilege}   || 3;
+
+    my $dbh = &_db_handle($db_hash);
+    my $sth = {};
+    my $sql = {};
+
+    if($id){
+
+        ## Status
+
+        $sql->{1} = qq(select status_to_role_id as status from role where role_id = ?);
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
+        $sth->{1}->execute($id) or error("Error in sth_1");
+        my $sql_result_1 = $sth->{1}->fetchrow_hashref || {};
+        $sth->{1}->finish;
+
+        if($status ne $sql_result_1->{status}){
+            $sql->{2} = qq(update role set status_to_role_id = ? where role_id = ?);
+            $sth->{2} = $dbh->prepare($sql->{2}) or error("Error in sth_2");
+            $sth->{2}->execute($status,$id) or error("Error in sth_2");
+            $sth->{2}->finish;
+        }
+
+        ## Privilege
+
+        $sql->{3} = qq(select privilege_to_role_id as privilege from role where role_id = ?);
+        $sth->{3} = $dbh->prepare($sql->{3}) or error("Error in sth_3");
+        $sth->{3}->execute($id) or error("Error in sth_3");
+        my $sql_result_3 = $sth->{3}->fetchrow_hashref || {};
+        $sth->{3}->finish;
+
+        my $db_privilege = $sql_result_3->{privilege};
+
+        $sql->{4} = qq(select privilege_id as privilege from privilege where description = ?);
+        $sth->{4} = $dbh->prepare($sql->{4}) or error("Error in sth_4");
+        $sth->{4}->execute($privilege) or error("Error in sth_4");
+        my $sql_result_4 = $sth->{4}->fetchrow_hashref || {};
+        $sth->{4}->finish;
+
+        my $new_privilege = $sql_result_4->{privilege} || undef;
+
+        if($new_privilege){
+            if($new_privilege ne $db_privilege){
+                $sql->{5} = qq(update role set privilege_to_role_id = ? where role_id = ?);
+                $sth->{5} = $dbh->prepare($sql->{5}) or error("Error in sth_5");
+                $sth->{5}->execute($new_privilege,$id) or error("Error in sth_5");
+                $sth->{5}->finish;
             }
         }
     }
@@ -1144,15 +1369,41 @@ sub _db_authen_fetch_user {
 
     if($sub_hash->{username}){
 
-        $sql->{1} = qq(select user_manager_id,username,password,real_name,privilege_to_user_manager_id as privilege from user_manager where username = ?);
-        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");
-        $sth->{1}->execute($sub_hash->{username}) or error("Error in sth_1 execute");
-        my $sql_1_result = $sth->{1}->fetchrow_hashref;
-
-        $result_hash = { id        => $sql_1_result->{user_manager_id},
-                         password  => $sql_1_result->{password},
-                         fullname  => $sql_1_result->{real_name},
-                         privilege => $sql_1_result->{privilege} };
+        $sql->{1} = qq(select                                                                                                       
+                        user_manager_id,                                                                                            
+                        username,                                                                                                   
+                        password,                                                                                                   
+                        real_name                                                                                                   
+                       from                                                                                                         
+                        user_manager                                                                                                
+                       where                                                                                                        
+                        username = ?                                                                                                
+                        and status_to_user_manager_id = ?);                                                                         
+                                                                                                                                    
+        $sth->{1} = $dbh->prepare($sql->{1}) or error("Error in sth_1");                                                            
+        $sth->{1}->execute($sub_hash->{username},1) or error("Error in sth_1 execute");                                             
+        my $sql_1_result = $sth->{1}->fetchrow_hashref;                                                                             
+                                                                                                                                    
+        if($sql_1_result->{user_manager_id}){                                                                                       
+                                                                                                                                    
+            $sql->{2} = qq(select                                                                                                   
+                            privilege_to_role_id as privilege                                                                       
+                           from                                                                                                     
+                            role                                                                                                    
+                           where                                                                                                    
+                            user_manager_to_role_id = ?                                                                             
+                            and group_manager_to_role_id = (select group_manager_id from group_manager where description = ?)       
+                            and status_to_role_id = ?);                                                                             
+                                                                                                                                    
+            $sth->{2} = $dbh->prepare($sql->{2}) or error("Error in sth_2");                                                        
+            $sth->{2}->execute($sql_1_result->{user_manager_id},config->{"appname"},1) or error("Error in sth_2 execute");          
+            my $sql_2_result = $sth->{2}->fetchrow_hashref;                                                                         
+                                                                                                                                    
+            $result_hash = { id        => $sql_1_result->{user_manager_id},                                                         
+                             password  => $sql_1_result->{password},                                                                
+                             fullname  => $sql_1_result->{real_name},                                                               
+                             privilege => $sql_2_result->{privilege} };
+        }
     }
     elsif($sub_hash->{id}){
 

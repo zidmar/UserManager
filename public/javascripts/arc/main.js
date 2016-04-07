@@ -88,8 +88,8 @@ define([
 
     status_store = new Memory({
         data: [
-            { id:"1", name:"ACTIVE"   },   
-            { id:"2", name:"INACTIVE" }
+            { id:"1", name:"Active"   },   
+            { id:"2", name:"Inactive" }
         ]    
     });
 
@@ -98,8 +98,8 @@ define([
     privilege_store = new Memory({
         data: [
             { id:"1", name:"Administrator"   },   
-            { id:"2", name:"User" },
-            { id:"3", name:"PowerUser" }
+            { id:"2", name:"PowerUser" },
+            { id:"3", name:"Read-Only User" }
         ]    
     });
     
@@ -120,7 +120,6 @@ define([
     arc.site_layout = new function(){
 
         const header_logo  = static_uri+"images/group.png";
-        //const header_title = "Stuff Tracker";
         const header_title = program_title;
 
         const header_home_link = {
@@ -137,8 +136,7 @@ define([
             id:"header_add",
             innerHTML:"Add Entry",
             "class":"headerLink",
-            //style:{cursor:"pointer",padding:"0 6px 0 6px",borderLeft:"1px dotted silver"},
-            style:{cursor:"pointer",padding:"0 6px 0 6px"},
+            style:{cursor:"pointer",padding:"0 6px 0 6px",borderLeft:"1px dotted silver"},
             click: function(evt){
 
                 if(!registry.byId('dialog_add_form_username')){
@@ -171,7 +169,6 @@ define([
             id:"header_admin",
             innerHTML:"Settings",
             "class":"headerLink",
-            //style:{ cursor: "pointer"},
             style:{cursor:"pointer",padding:"0 6px 0 0"},
             click: function(evt){
 
@@ -189,7 +186,6 @@ define([
             id:"header_filter",
             innerHTML:"Advanced Filter",
             "class":"headerLink",
-            //style:{ cursor: "pointer",marginRight:"5px" },
             style:{cursor:"pointer",padding:"0 6px 0 6px",borderLeft:"1px dotted silver",marginRight:"5px"},
             click: function(evt){
 
@@ -249,7 +245,6 @@ define([
                                 Filter.value(value)
                             )
                         );
-                        //setGridFilter('gridx_Grid_0',{query:value});
                         cache_store.put({ id:"filter", query: value });
 
                         registry.byId("header_search_button").set("label",'<img style="width:14px;height:14px" src="'+static_uri+'images/delete.png" title="Clear the Service table filter">');
@@ -272,7 +267,7 @@ define([
             }
         };
 
-        const border_container = new BorderContainer({gutters:false,style:"padding: 0;width:980px;height:500px;margin-left:auto;margin-right:auto;margin-top:80px"});
+        const border_container = new BorderContainer({gutters:false,style:"padding: 0;width:890px;height:500px;margin-left:auto;margin-right:auto;margin-top:80px"});
 
         // Top Pane
         const top_pane = new ContentPane({region:"top",style:"background-color: #F8F8F8;height:39px;padding:0;border-top: 1px solid silver;border-left: 1px solid silver;border-right: 1px solid silver;border-top-right-radius: 10px;border-top-left-radius: 10px;"}).placeAt(border_container);
@@ -281,26 +276,25 @@ define([
 
         tp["0"]  = domConstruct.create('table', {border:"0",style:{width:"100%",height:"100%",whiteSpace:"nowrap"}},top_pane.containerNode);
         tp["1"]  = domConstruct.create('tbody', {},tp["0"]);
+
         tp["2"]  = domConstruct.create('tr', {},tp["1"]);
         tp["3"]  = domConstruct.create('td', {style:{width:"20px",height:"5px",paddingRight:"2px",paddingLeft:"2px"}},tp["2"]);
-        tp["4"]  = domConstruct.create('img', {src:header_logo,alt:"Active",style:{verticalAlign:"middle"}},tp["3"]);
-        tp["5"]  = domConstruct.create('td', {style:{width:"100px",fontSize:"14px",fontWeight:"bold",verticalAlign:"middle"}},tp["2"]);
-        tp["6"]  = domConstruct.create('span', {style:{paddingLeft:"6px",borderLeft:"1px dotted silver"},innerHTML:header_title},tp["5"]);
-        tp["7"]  = domConstruct.create('td', {style:{width:"200px",verticalAlign:"middle"}},tp["2"]);
-        tp["8"]  = domConstruct.create('span',header_home_link,tp["7"]);
-        tp["9"] = domConstruct.create('span',header_refresh_link,tp["7"]);
+        domConstruct.create('img', {src:header_logo,alt:"Active",style:{verticalAlign:"middle"}},tp["3"]);
 
-        tp["11"]  = domConstruct.create('td', {style:{width:"200px",textAlign:"center",verticalAlign:"middle"}},tp["2"]);
-        tp["12"] = domConstruct.create('span',header_add_link,tp["11"]);
+        tp["4"]  = domConstruct.create('td', {style:{width:"110px",fontSize:"14px",fontWeight:"bold",verticalAlign:"middle"}},tp["2"]);
+        domConstruct.create('span', {style:{paddingLeft:"6px",borderLeft:"1px dotted silver"},innerHTML:header_title},tp["4"]);
 
-        tp["13"] = domConstruct.create('td', {style:{textAlign:"right",verticalAlign:"middle"}},tp["2"]);
-        tp["14"] = domConstruct.create('span',header_admin_link,tp["13"]);
-        tp["15"] = domConstruct.create('span',header_filter_link,tp["13"]);
-        header_search_textbox.placeAt(tp["13"]);
-        tp["16"] = domConstruct.create('span', {innerHTML:"&nbsp;&nbsp;"},tp["13"]);
-        header_search_button.placeAt(tp["13"]);
-        tp["17"] = domConstruct.create('span', {style:{marginLeft:"8px",padding:"0 0 0 8px",borderLeft:"1px dotted silver"},innerHTML:"Hello: <strong>"+session_user+"</strong>&nbsp;&bull;&nbsp;"},tp["13"]);
-        tp["18"] = domConstruct.create('span', header_logout_link,tp["13"]);
+        tp["5"]  = domConstruct.create('td', {style:{width:"200px",verticalAlign:"middle"}},tp["2"]);
+        domConstruct.create('span',header_add_link,tp["5"]);
+
+        tp["6"] = domConstruct.create('td', {style:{textAlign:"right",verticalAlign:"middle"}},tp["2"]);
+        domConstruct.create('span',header_admin_link,tp["6"]);
+        domConstruct.create('span',header_filter_link,tp["6"]);
+        header_search_textbox.placeAt(tp["6"]);
+        domConstruct.create('span', {innerHTML:"&nbsp;&nbsp;"},tp["6"]);
+        header_search_button.placeAt(tp["6"]);
+        domConstruct.create('span', {style:{marginLeft:"8px",padding:"0 0 0 8px",borderLeft:"1px dotted silver"},innerHTML:"Hello: <strong>"+session_user+"</strong>&nbsp;&bull;&nbsp;"},tp["6"]);
+        domConstruct.create('span', header_logout_link,tp["6"]);
 
         // Center Pane
         const center_pane = new ContentPane({id:"main_container",region:"center",splitter:false,style:"padding:5px;border:1px solid silver;border-bottom-right-radius: 10px;border-bottom-left-radius: 10px;"}).placeAt(border_container);
@@ -333,6 +327,9 @@ define([
    
     function createAddDialog(){
 
+        dijit.byId("dialog_add").onShow = function(){
+        };
+
         // username
         new TextBox({ id:   "dialog_add_form_username", 
                       name: "dialog_add_form_username", placeHolder: "Add Username" });
@@ -341,14 +338,27 @@ define([
         new TextBox({ id:   "dialog_add_form_real_name", 
                       name: "dialog_add_form_real_name", placeHolder: "Add Real Name" });
 
+        // department
         new FilteringSelect({ 
             id: "dialog_add_form_department", 
             name: "dialog_add_form_department", 
             value: "", 
             required: false, 
             placeHolder: "Select Department",
-            store: JsonRest({target:main_uri+"/filtering_select/department/"})
+            store:department_store_select_cache 
         });
+
+        // password
+        new TextBox({ id:   "dialog_add_form_password", 
+                      name: "dialog_add_form_password", 
+                      type: "password",
+                      placeHolder: "Add Password" });
+
+        // confirm password
+        new TextBox({ id:   "dialog_add_form_confirm_password", 
+                      name: "dialog_add_form_confirm_password", 
+                      type: "password",
+                      placeHolder: "Confirm Password" });
 
         // Submit 
         const dialog_add_button1 = new Button({
@@ -384,7 +394,57 @@ define([
                 element_object["department"].setAttribute("name", "department");
                 element_object["department"].setAttribute("value", registry.byId("dialog_add_form_department").get("value") );
                 form.appendChild(element_object["department"]);
-              
+
+                const password         = registry.byId("dialog_add_form_password").get("value");
+                const confirm_password = registry.byId("dialog_add_form_confirm_password").get("value");
+
+                if(password){
+
+                    if (password != confirm_password){ 
+                        // Remove Form
+                        dojo.body().removeChild(form);
+
+                        alert("New Password and Confirm New Password do not match");
+
+                        registry.byId("dialog_add_progress").set({indeterminate: false, maximum: 100, label: "",value: ""});
+                        domStyle.set(registry.byId("dialog_add_progress").domNode, "display", "none");
+                        return false;
+                    }
+
+                    element_object["password"] = document.createElement("input");
+                    element_object["password"].setAttribute("type", "hidden");
+                    element_object["password"].setAttribute("name", "password");
+                    element_object["password"].setAttribute("value", registry.byId("dialog_add_form_password").get("value") );
+                    form.appendChild(element_object["password"]);
+
+                    element_object["confirm_password"] = document.createElement("input");
+                    element_object["confirm_password"].setAttribute("type", "hidden");
+                    element_object["confirm_password"].setAttribute("name", "confirm_password");
+                    element_object["confirm_password"].setAttribute("value", registry.byId("dialog_add_form_confirm_password").get("value") );
+                    form.appendChild(element_object["confirm_password"]);
+                }
+
+                const role_array = new Array();
+                const role_children_array = role_grid.model.children();
+                for (var i = 0; i < role_children_array.length; i++) {
+                    var status = role_grid.model.byId(role_children_array[i]).data[1];
+                    var group  = role_grid.model.byId(role_children_array[i]).data[2];
+                    var role   = role_grid.model.byId(role_children_array[i]).data[3];
+                    if(status == true){
+                        status = 1; 
+                    }
+                    else{
+                        status = 2;
+                    }
+                    role_array.push({status:status,group:group,role:role});
+                }
+
+                element_object["role"] = document.createElement("input");
+                element_object["role"].setAttribute("type", "hidden");
+                element_object["role"].setAttribute("name", "role");
+                element_object["role"].setAttribute("value", dojo.toJson(role_array) );
+                form.appendChild(element_object["role"]);
+
                 xhr.post(main_uri+"/add", {
                     data: domForm.toObject("form_name"),
                     handleAs: "text"
@@ -406,6 +466,7 @@ define([
                     
                     //Stop ProgressBar
                     registry.byId("dialog_add_progress").set({indeterminate: false, label: response, value: 100});
+
                 }, function(error){
                     console.log("An error occurred: " + error);
                     return error;
@@ -418,6 +479,7 @@ define([
             label: "Clear",
             onClick: function(){
                 clearAddForm();
+                role_grid.model.clearLazyData();
             }
         });
 
@@ -431,14 +493,14 @@ define([
         // Display
         ////
 
-        const content_pane = new ContentPane();
+        const content_pane = new ContentPane({style:"width:390px"});
 
         const cp_object = new Object();
 
-        cp_object["0"] = domConstruct.create('table', {border:"0",style:{width:"400px"}},content_pane.containerNode);
+        cp_object["0"] = domConstruct.create('table', {border:"0",style:{width:"100%"}},content_pane.containerNode);
         cp_object["1"] = domConstruct.create('tbody', {},cp_object["0"]);
         cp_object["2"] = domConstruct.create('tr', {},cp_object["1"]);
-        cp_object["3"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center",paddingBottom:"15px"}},cp_object["2"]);
+        cp_object["3"] = domConstruct.create('td', {colSpan:'2',style:{paddingBottom:"15px"}},cp_object["2"]);
         domConstruct.create('span', {innerHTML:"Complete the following to create a new entry"},cp_object["3"]);
 
         const required_object = new Object();
@@ -449,15 +511,15 @@ define([
         required_object["username_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["username_1"]);
         registry.byId("dialog_add_form_username").placeAt(required_object["username_3"]);
 
+        cp_object["4"] = domConstruct.create('tr', {},cp_object["1"]);
+        cp_object["5"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center",padding:"5px 0 5px 0"}},cp_object["4"]);
+        domConstruct.create('hr', {"class":"style-six"},cp_object["5"]);
+
         required_object["real_name_1"] = domConstruct.create('tr', {},cp_object["1"]);
         required_object["real_name_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["real_name_1"]);
         domConstruct.create('span', {innerHTML:"Real Name:"},required_object["real_name_2"]);
         required_object["real_name_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["real_name_1"]);
         registry.byId("dialog_add_form_real_name").placeAt(required_object["real_name_3"]);
-
-        cp_object["4"] = domConstruct.create('tr', {},cp_object["1"]);
-        cp_object["5"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center"}},cp_object["4"]);
-        domConstruct.create('hr', {"class":"style-six"},cp_object["5"]);
 
         required_object["department_1"] = domConstruct.create('tr', {},cp_object["1"]);
         required_object["department_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["department_1"]);
@@ -466,12 +528,85 @@ define([
         registry.byId("dialog_add_form_department").placeAt(required_object["department_3"]);
 
         cp_object["6"] = domConstruct.create('tr', {},cp_object["1"]);
-        cp_object["7"] = domConstruct.create('td', {colSpan:'2',style:{padding:"10px 0 5px 0",textAlign:"center"}},cp_object["6"]);
-        dialog_add_button1.placeAt(cp_object["7"]);
-        dialog_add_button2.placeAt(cp_object["7"]);
+        cp_object["7"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center",padding:"5px 0 5px 0"}},cp_object["6"]);
+        domConstruct.create('hr', {"class":"style-six"},cp_object["7"]);
+
+        required_object["password_1"] = domConstruct.create('tr', {},cp_object["1"]);
+        required_object["password_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["password_1"]);
+        domConstruct.create('span', {innerHTML:"Password:"},required_object["password_2"]);
+        required_object["password_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["password_1"]);
+        registry.byId("dialog_add_form_password").placeAt(required_object["password_3"]);
+
+        required_object["confirm_password_1"] = domConstruct.create('tr', {},cp_object["1"]);
+        required_object["confirm_password_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["confirm_password_1"]);
+        domConstruct.create('span', {innerHTML:"Confirm Password:"},required_object["confirm_password_2"]);
+        required_object["confirm_password_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["confirm_password_1"]);
+        registry.byId("dialog_add_form_confirm_password").placeAt(required_object["confirm_password_3"]);
+
         cp_object["8"] = domConstruct.create('tr', {},cp_object["1"]);
-        cp_object["9"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center"}},cp_object["8"]);
-        dialog_add_progress.placeAt(cp_object["9"]);
+        cp_object["9"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center",padding:"5px 0 5px 0"}},cp_object["8"]);
+        domConstruct.create('hr', {"class":"style-six"},cp_object["9"]);
+
+        cp_object["10"] = new ContentPane({style:"padding:0;border:0;height:130px"}).placeAt(content_pane);
+
+        const role_grid_layout = [
+            {name:"Status", field:"status", style: "text-align:center;", editable: true,alwaysEditing: true,
+                editor: "dijit.form.CheckBox",
+                editorArgs: {
+                    props: 'value: true'
+                }
+            },
+            {name:"Application", field:"group", style: "text-align:center;"},
+            {
+                name:"Role", field:"privilege", style: "text-align:center;", editable: true,
+                alwaysEditing: true,
+                editor: FilteringSelect,
+                editorArgs: {
+                    props: 'store: privilege_store'
+                }
+            }
+        ];
+
+        const role_grid = new Grid({ 
+            cacheClass: Cache,
+            style:"width:100%;height:100%",
+            store: JsonRest({target:main_uri+"/role_manager/"}),
+            structure: role_grid_layout,
+            selectRowTriggerOnCell: true,
+            columnWidthAutoResize: true,
+            modules: [
+                "gridx/modules/VirtualVScroller",
+                "gridx/modules/CellWidget",
+                "gridx/modules/Edit",
+                "gridx/modules/SingleSort"
+            ],
+            editLazySave: true
+        }).placeAt(cp_object["10"]);
+
+        // refresh grid
+        dijit.byId("dialog_add").onShow = function(){
+            setGridFilter(role_grid.id,{});
+        };
+
+        // clear grid edits
+        dijit.byId("dialog_add").onHide = function(){
+            role_grid.model.clearLazyData();
+        };
+
+        const bottom_pane = new ContentPane({style:"padding:0;border:0;height:65px"}).placeAt(content_pane);
+
+        const bp_object = new Object();
+
+        bp_object["0"] = domConstruct.create('table', {border:"0",style:{width:"100%"}},bottom_pane.containerNode);
+        bp_object["1"] = domConstruct.create('tbody', {},bp_object["0"]);
+
+        bp_object["2"] = domConstruct.create('tr', {},bp_object["1"]);
+        bp_object["3"] = domConstruct.create('td', {colSpan:'2',style:{padding:"5px 0 5px 0",textAlign:"center"}},bp_object["2"]);
+        dialog_add_button1.placeAt(bp_object["3"]);
+        dialog_add_button2.placeAt(bp_object["3"]);
+        bp_object["4"] = domConstruct.create('tr', {},bp_object["1"]);
+        bp_object["5"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center"}},bp_object["4"]);
+        dialog_add_progress.placeAt(bp_object["5"]);
 
         registry.byId("dialog_add").set("content",content_pane);
     }
@@ -484,11 +619,15 @@ define([
         registry.byId("dialog_add_form_username").set("value",null);
         registry.byId("dialog_add_form_real_name").set("value",null);
         registry.byId("dialog_add_form_department").set("displayedValue",null);
+        registry.byId("dialog_add_form_password").set("value",null);
+        registry.byId("dialog_add_form_confirm_password").set("value",null);
 
         registry.byId('dialog_add').show();
     }
 
     function createModifyDialog(fn_object){
+
+        const username = fn_object.cell_data.rawData["username"];
 
         // username
         new TextBox({ id:   "dialog_modify_form_"+fn_object.rid+"_username", 
@@ -497,7 +636,7 @@ define([
         // real name
         new TextBox({ id:   "dialog_modify_form_"+fn_object.rid+"_real_name", 
                       name: "dialog_modify_form_"+fn_object.rid+"_real_name", placeHolder: "Add Real Name" });
-/*
+
         new FilteringSelect({ 
             id: "dialog_modify_form_"+fn_object.rid+"_status", 
             name: "dialog_modify_form_"+fn_object.rid+"_status", 
@@ -506,18 +645,6 @@ define([
             placeHolder: "Select Status",
             store: status_store
         });
-*/
-        new CheckBox({ id:   "dialog_modify_form_"+fn_object.rid+"_status",
-                       name: "dialog_modify_form_"+fn_object.rid+"_status"  })
-
-        new FilteringSelect({ 
-            id: "dialog_modify_form_"+fn_object.rid+"_privilege", 
-            name: "dialog_modify_form_"+fn_object.rid+"_privilege", 
-            value: "", 
-            required: false, 
-            placeHolder: "Select Privilege",
-            store: privilege_store
-        });
 
         new FilteringSelect({ 
             id: "dialog_modify_form_"+fn_object.rid+"_department", 
@@ -525,13 +652,27 @@ define([
             value: "", 
             required: false, 
             placeHolder: "Select Department",
-            store: JsonRest({target:main_uri+"/filtering_select/department/"})
+            store: department_store_select_cache
         });
+
+        // password
+        new TextBox({ id:   "dialog_modify_form_"+fn_object.rid+"_new_password", 
+                      name: "dialog_modify_form_"+fn_object.rid+"_new_password", 
+                      type: "password",
+                      placeHolder: "Add New Password" });
+
+        // confirm password
+        new TextBox({ id:   "dialog_modify_form_"+fn_object.rid+"_confirm_new_password", 
+                      name: "dialog_modify_form_"+fn_object.rid+"_confirm_new_password", 
+                      type: "password",
+                      placeHolder: "Confirm New Password" });
 
         const dialog_modify_button = new Button({
             id: "dialog_modify_button_"+fn_object.rid,
             label: "Update",
             onClick: function(){
+
+                var hide_dialog = null;
                 
                 domStyle.set(registry.byId("dialog_modify_progress_"+fn_object.rid).domNode, "display", "block");
                 registry.byId("dialog_modify_progress_"+fn_object.rid).set({indeterminate: true, maximum: 100, label: 'Loading...'});
@@ -554,28 +695,12 @@ define([
                     current_grid.model.set(fn_object.rid,form_object_real_name);
                 }
 
-                // status 
+                // status
+                const form_object_status = { "status": registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("displayedValue") ,
+                                             "status_id": registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("value")};
 
-                //const form_object_status = { "status": registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("displayedValue") ,
-                //                             "status_id": registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("value")};
-
-                //if(registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("value")){
-                //    current_grid.model.set(fn_object.rid,form_object_status);
-                //}
-
-                const form_object_status = { "status": registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("checked")};
-
-                if(registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("checked")){
+                if(registry.byId("dialog_modify_form_"+fn_object.rid+"_status").get("value")){
                     current_grid.model.set(fn_object.rid,form_object_status);
-                }
-
-                // privilege 
-
-                const form_object_privilege = { "privilege": registry.byId("dialog_modify_form_"+fn_object.rid+"_privilege").get("displayedValue") ,
-                                                "privilege_id": registry.byId("dialog_modify_form_"+fn_object.rid+"_privilege").get("value")};
-
-                if(registry.byId("dialog_modify_form_"+fn_object.rid+"_privilege").get("value")){
-                    current_grid.model.set(fn_object.rid,form_object_privilege);
                 }
 
                 // department 
@@ -590,16 +715,86 @@ define([
                 const check_if_dirty = current_grid.model.getChanged();
 
                 if(check_if_dirty.length > 0){
-
                     current_grid.model.save();
+                    hide_dialog = 1;
+                }
+
+                const new_password         = registry.byId("dialog_modify_form_"+fn_object.rid+"_new_password").get("value");
+                const confirm_new_password = registry.byId("dialog_modify_form_"+fn_object.rid+"_confirm_new_password").get("value");
+
+                if(new_password){
+
+                    // Create a form to handle Grid Data
+                    const form = document.createElement("form");
+                    form.setAttribute("id", "change_password_form");
+                    form.setAttribute("name", "change_password_form");
+                    dojo.body().appendChild(form);
+                        
+                    const rid_element = document.createElement("input");
+                    rid_element.setAttribute("type", "hidden");
+                    rid_element.setAttribute("name", "rid");
+                    rid_element.setAttribute("value", fn_object.rid);
+                    form.appendChild(rid_element);
+
+                    if (new_password != confirm_new_password){ 
+                        // Remove Form
+                        dojo.body().removeChild(form);
+
+                        registry.byId("dialog_modify_progress_"+fn_object.rid).set({indeterminate: false, maximum: 100, label: "",value: ""});
+                        domStyle.set(registry.byId("dialog_modify_progress_"+fn_object.rid).domNode, "display", "none");   
+
+                        alert("New Password and Confirm New Password do not match");
+                        return false;
+                    }
+
+                    const new_password_element = document.createElement("input");
+                    new_password_element.setAttribute("type", "hidden");
+                    new_password_element.setAttribute("name", "new_password");
+                    new_password_element.setAttribute("value", new_password);
+                    form.appendChild(new_password_element);
+
+                    const confirm_new_password_element = document.createElement("input");
+                    confirm_new_password_element.setAttribute("type", "hidden");
+                    confirm_new_password_element.setAttribute("name", "confirm_new_password");
+                    confirm_new_password_element.setAttribute("value", confirm_new_password);
+                    form.appendChild(confirm_new_password_element);
+
+                    xhr.post(main_uri+"/modify_password", {
+                        data: domForm.toObject("change_password_form"),
+                        handleAs: "text"
+                    }).then(function(response){
+
+                        setGridFilter('gridx_Grid_0',{});
+                        cache_store.remove("filter");
+
+                        // Remove Form
+                        dojo.body().removeChild(form);
+                        
+                        hide_dialog = 1;
+
+                    }, function(error){
+                        console.log("An error occurred: " + error);
+                        return error;
+                    });
+                }
+
+                // Role Grid - Save
+                const check_if_dirty_role = role_grid.model.getChanged();
+                if(check_if_dirty_role.length > 0){
+                    for	(var index = 0; index < check_if_dirty_role.length; index++) {
+                        role_grid.model.save();
+                    } 
+                    hide_dialog = 1;
+                }
+
+                if(hide_dialog){
 
                     setTimeout(function(){
-                        registry.byId("dialog_modify_progress_"+fn_object.rid).set({indeterminate: false, label: "Modified entry entry successfully!", value: 100});
+                        registry.byId("dialog_modify_progress_"+fn_object.rid).set({indeterminate: false, label: "Modified entry successfully!", value: 100});
                     },500);
 
                     setTimeout(function(){
-                        setGridFilter(current_grid,{});
-                        registry.byId("dialog_modify_"+fn_object.rid).hide();
+                        registry.byId('dialog_modify_'+fn_object.rid).hide();
                     },2000);
                 }
             }
@@ -615,200 +810,147 @@ define([
         // Display
         ////
 
-        const tab_container = new TabContainer({ style:"width: 445px;",doLayout:false });
+        const border_container = new BorderContainer({gutters:false,style:"width:390px;height:475px"});
 
-        // Tab 1
+        const left_pane = new ContentPane({region:"left"}).placeAt(border_container);
 
-        const t1 = new ContentPane({ title:"Modify",style:"padding:0" }).placeAt(tab_container);
+        const lp_object = new Object();
 
-        const t1_object = new Object();
-
-        t1_object["0"] = domConstruct.create('table', {border:"0",style:{width:"100%"}},t1.containerNode);
-        t1_object["1"] = domConstruct.create('tbody', {},t1_object["0"]);
-        t1_object["2"] = domConstruct.create('tr', {},t1_object["1"]);
-        t1_object["3"] = domConstruct.create('td', {colSpan:'2',style:{padding:"15px"}},t1_object["2"]);
-        t1_object["4"] = domConstruct.create('span', {innerHTML:"Complete the following to MODIFY the selected entry:"},t1_object["3"]);
+        lp_object["0"] = domConstruct.create('table', {border:"0",style:{width:"100%"}},left_pane.containerNode);
+        lp_object["1"] = domConstruct.create('tbody', {},lp_object["0"]);
+        lp_object["2"] = domConstruct.create('tr', {},lp_object["1"]);
+        lp_object["3"] = domConstruct.create('td', {colSpan:'2',style:{padding:"10px"}},lp_object["2"]);
+        lp_object["4"] = domConstruct.create('span', {innerHTML:"Complete the following to MODIFY the selected user: <strong>"+username+"</strong>"},lp_object["3"]);
 
         const required_object = new Object();
 
         // username
-        required_object["username_1"] = domConstruct.create('tr', {},t1_object["1"]);
+        required_object["username_1"] = domConstruct.create('tr', {},lp_object["1"]);
         required_object["username_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["username_1"]);
         domConstruct.create('span', {innerHTML:"Username:"},required_object["username_2"]);
         required_object["username_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["username_1"]);
         registry.byId("dialog_modify_form_"+fn_object.rid+"_username").placeAt(required_object["username_3"]);
 
         // real name
-        required_object["real_name_1"] = domConstruct.create('tr', {},t1_object["1"]);
+        required_object["real_name_1"] = domConstruct.create('tr', {},lp_object["1"]);
         required_object["real_name_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["real_name_1"]);
         domConstruct.create('span', {innerHTML:"Real Name:"},required_object["real_name_2"]);
         required_object["real_name_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["real_name_1"]);
         registry.byId("dialog_modify_form_"+fn_object.rid+"_real_name").placeAt(required_object["real_name_3"]);
 
         // status
-        required_object["status_1"] = domConstruct.create('tr', {},t1_object["1"]);
+        required_object["status_1"] = domConstruct.create('tr', {},lp_object["1"]);
         required_object["status_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["status_1"]);
         domConstruct.create('span', {innerHTML:"Status:"},required_object["status_2"]);
         required_object["status_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["status_1"]);
         registry.byId("dialog_modify_form_"+fn_object.rid+"_status").placeAt(required_object["status_3"]);
 
-        // privilege
-        required_object["privilege_1"] = domConstruct.create('tr', {},t1_object["1"]);
-        required_object["privilege_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["privilege_1"]);
-        domConstruct.create('span', {innerHTML:"Privilege:"},required_object["privilege_2"]);
-        required_object["privilege_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["privilege_1"]);
-        registry.byId("dialog_modify_form_"+fn_object.rid+"_privilege").placeAt(required_object["privilege_3"]);
-
-        t1_object["5"] = domConstruct.create('tr', {},t1_object["1"]);
-        t1_object["6"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center"}},t1_object["5"]);
-        domConstruct.create('hr', {"class":"style-six"},t1_object["6"]);
-
         // department
-        required_object["department_1"] = domConstruct.create('tr', {},t1_object["1"]);
+        required_object["department_1"] = domConstruct.create('tr', {},lp_object["1"]);
         required_object["department_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["department_1"]);
         domConstruct.create('span', {innerHTML:"Department:"},required_object["department_2"]);
         required_object["department_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["department_1"]);
         registry.byId("dialog_modify_form_"+fn_object.rid+"_department").placeAt(required_object["department_3"]);
 
-        t1_object["7"]  = domConstruct.create('tr', {},t1_object["1"]);
-        t1_object["8"]  = domConstruct.create('td', {colSpan:'2',style:{padding:"15px",textAlign:"center"}},t1_object["7"]);
-        dialog_modify_button.placeAt(t1_object["8"]);
-        t1_object["9"]  = domConstruct.create('tr', {},t1_object["1"]);
-        t1_object["10"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center"}},t1_object["9"]);
-        dialog_modify_progress.placeAt(t1_object["10"]);
-
-        // Tab 2
+        lp_object["5"] = domConstruct.create('tr', {},lp_object["1"]);
+        lp_object["6"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center",padding:"5px 0 5px 0"}},lp_object["5"]);
+        domConstruct.create('hr', {"class":"style-six"},lp_object["6"]);
 
         // password
-        new TextBox({ id:   "dialog_modify_form_"+fn_object.rid+"_new_password", 
-                      name: "dialog_modify_form_"+fn_object.rid+"_new_password", 
-                      type: "password",
-                      placeHolder: "Add New Password" });
+        required_object["new_password_1"] = domConstruct.create('tr', {},lp_object["1"]);
+        required_object["new_password_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["new_password_1"]);
+        domConstruct.create('span', {innerHTML:"New Password:"},required_object["new_password_2"]);
+        required_object["new_password_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["new_password_1"]);
+        registry.byId("dialog_modify_form_"+fn_object.rid+"_new_password").placeAt(required_object["new_password_3"]);
 
         // confirm password
-        new TextBox({ id:   "dialog_modify_form_"+fn_object.rid+"_confirm_new_password", 
-                      name: "dialog_modify_form_"+fn_object.rid+"_confirm_new_password", 
-                      type: "password",
-                      placeHolder: "Confirm New Password" });
+        required_object["confirm_new_password_1"] = domConstruct.create('tr', {},lp_object["1"]);
+        required_object["confirm_new_password_2"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},required_object["confirm_new_password_1"]);
+        domConstruct.create('span', {innerHTML:"Confirm New Password:"},required_object["confirm_new_password_2"]);
+        required_object["confirm_new_password_3"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},required_object["confirm_new_password_1"]);
+        registry.byId("dialog_modify_form_"+fn_object.rid+"_confirm_new_password").placeAt(required_object["confirm_new_password_3"]);
 
-        const dialog_change_password_button = new Button({
-            id: "dialog_change_password_button_"+fn_object.rid,
-            label: "Change Password",
-            onClick: function(){
-                
-                domStyle.set(registry.byId("dialog_change_password_progress_"+fn_object.rid).domNode, "display", "block");
-                registry.byId("dialog_change_password_progress_"+fn_object.rid).set({indeterminate: true, maximum: 100, label: 'Loading...'});
+        lp_object["7"] = domConstruct.create('tr', {},lp_object["1"]);
+        lp_object["8"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center",padding:"5px 0  5px 0"}},lp_object["7"]);
+        domConstruct.create('hr', {"class":"style-six"},lp_object["8"]);
 
-                // Create a form to handle Grid Data
-                const form = document.createElement("form");
-                form.setAttribute("id", "change_password_form");
-                form.setAttribute("name", "change_password_form");
-                dojo.body().appendChild(form);
-                    
-                const rid_element = document.createElement("input");
-                rid_element.setAttribute("type", "hidden");
-                rid_element.setAttribute("name", "rid");
-                rid_element.setAttribute("value", fn_object.rid);
-                form.appendChild(rid_element);
+        // Role
 
-                const new_password         = registry.byId("dialog_modify_form_"+fn_object.rid+"_new_password").get("value");
-                const confirm_new_password = registry.byId("dialog_modify_form_"+fn_object.rid+"_confirm_new_password").get("value");
- 
-                if (new_password != confirm_new_password){ 
-                    // Remove Form
-                    dojo.body().removeChild(form);
+        lp_object["9"] = new ContentPane({region:"center",splitter:false,style:"padding:0;border:0;height:135px"}).placeAt(left_pane);
 
-                    registry.byId("dialog_change_password_progress_"+fn_object.rid).set({indeterminate: false, maximum: 100, label: "",value: ""});
-                    domStyle.set(registry.byId("dialog_change_password_progress_"+fn_object.rid).domNode, "display", "none");   
-
-                    alert("New Password and Confirm New Password do not match");
-                    return false;
+        const role_grid_layout = [
+            {name:"Status", field:"status", width: "55px", style: "text-align:center;", editable: true,alwaysEditing: true,
+                editor: "dijit.form.CheckBox",
+                editorArgs: {
+                    props: 'value: true'
                 }
-
-                const new_password_element = document.createElement("input");
-                new_password_element.setAttribute("type", "hidden");
-                new_password_element.setAttribute("name", "new_password");
-                new_password_element.setAttribute("value", new_password);
-                form.appendChild(new_password_element);
-
-                const confirm_new_password_element = document.createElement("input");
-                confirm_new_password_element.setAttribute("type", "hidden");
-                confirm_new_password_element.setAttribute("name", "confirm_new_password");
-                confirm_new_password_element.setAttribute("value", confirm_new_password);
-                form.appendChild(confirm_new_password_element);
-
-                xhr.post(main_uri+"/modify_password", {
-                    data: domForm.toObject("change_password_form"),
-                    handleAs: "text"
-                }).then(function(response){
-
-                    setGridFilter('gridx_Grid_0',{});
-                    cache_store.remove("filter");
-
-                    // Remove Form
-                    dojo.body().removeChild(form);
-                    
-                    //Stop ProgressBar
-                    registry.byId("dialog_change_password_progress_"+fn_object.rid).set({indeterminate: false, label: response, value: 100});
-               
-                    setTimeout(function(){
-                        registry.byId('dialog_modify_'+fn_object.rid).hide();
-                    },1500);
-
-                }, function(error){
-                    console.log("An error occurred: " + error);
-                    return error;
-                });
+            },
+            {name:"Application", field:"group", width: "125px", style: "text-align:center;"},
+            {
+                name:"Role", field:"privilege", style: "text-align:center;", editable: true,
+                alwaysEditing: true,
+                editor: FilteringSelect,
+                editorArgs: {
+                    props: 'store: privilege_store',
+                    fromEditor: function(valueInEditor, cell){
+                        var obj = privilege_store.get(valueInEditor);
+                        return obj.name;
+                    },
+                    toEditor: function(storeData, gridData, cell, editor){
+                        var obj = privilege_store.query({name:storeData});
+                        return obj[0].id;
+                    }
+                }
             }
-        });
+        ];
 
-        const dialog_change_password_progress = new ProgressBar({
-            id: "dialog_change_password_progress_"+fn_object.rid,
-            style:"width:100%;", 
-            value: ""
-        });
+        const role_grid = new Grid({ 
+            cacheClass: Cache,
+            style:"width:100%;height:100%",
+            store: JsonRest({target:main_uri+"/role_manager/"+fn_object.rid}),
+            structure: role_grid_layout,
+            selectRowTriggerOnCell: true,
+            columnWidthAutoResize: true,
+            modules: [
+                "gridx/modules/VirtualVScroller",
+                "gridx/modules/CellWidget",
+                "gridx/modules/Edit",
+                "gridx/modules/SingleSort"
+            ],
+            editLazySave: true
+        }).placeAt(lp_object["9"]);
 
-        const t2 = new ContentPane({ title:"Change Password",style:"padding:0" }).placeAt(tab_container);
+        // refresh grid
+        dijit.byId("dialog_modify_"+fn_object.rid).onShow = function(){
+            setGridFilter(role_grid.id,{});
+        };
 
-        const t2_object = new Object();
+        const bottom_pane = new ContentPane({region:"bottom",style:"height:55px;padding:5px;"}).placeAt(border_container);
 
-        t2_object["0"] = domConstruct.create('table', {border:"0",style:{width:"100%"}},t2.containerNode);
-        t2_object["1"] = domConstruct.create('tbody', {},t2_object["0"]);
-        t2_object["2"] = domConstruct.create('tr', {},t2_object["1"]);
-        t2_object["3"] = domConstruct.create('td', {colSpan:'2',style:{padding:"15px"}},t2_object["2"]);
-        domConstruct.create('span', {innerHTML:"Change password for this user?"},t2_object["3"]);
+        const bp_object = new Object();
 
-        // password
-        t2_object["4"] = domConstruct.create('tr', {},t2_object["1"]);
-        t2_object["5"] = domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},t2_object["4"]);
-        domConstruct.create('span', {innerHTML:"New Password:"},t2_object["5"]);
-        t2_object["6"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},t2_object["4"]);
-        registry.byId("dialog_modify_form_"+fn_object.rid+"_new_password").placeAt(t2_object["6"]);
+        bp_object["0"] = domConstruct.create('table', {border:"0",style:{width:"100%"}},bottom_pane.containerNode);
+        bp_object["1"] = domConstruct.create('tbody', {},bp_object["0"]);
 
-        // new password
-        t2_object["7"] = domConstruct.create('tr', {},t2_object["1"]);
-        t2_object["8"] =domConstruct.create('td', {style:{textAlign:"right",padding:"5px",width:"40%"}},t2_object["7"]);
-        domConstruct.create('span', {innerHTML:"Confirm New Password:"},t2_object["8"]);
-        t2_object["9"] = domConstruct.create('td', {style:{textAlign:"left",paddingLeft:"10px",width:"60%"}},t2_object["7"]);
-        registry.byId("dialog_modify_form_"+fn_object.rid+"_confirm_new_password").placeAt(t2_object["9"]);
+        bp_object["2"]  = domConstruct.create('tr', {},bp_object["1"]);
+        bp_object["3"]  = domConstruct.create('td', {style:{textAlign:"center"}},bp_object["2"]);
+        dialog_modify_button.placeAt(bp_object["3"]);
+        bp_object["4"]  = domConstruct.create('tr', {},bp_object["1"]);
+        bp_object["5"] = domConstruct.create('td', {style:{textAlign:"center"}},bp_object["4"]);
+        dialog_modify_progress.placeAt(bp_object["5"]);
 
-        t2_object["10"] = domConstruct.create('tr', {},t2_object["1"]);
-        t2_object["11"] = domConstruct.create('td', {colSpan:'2',style:{padding:"15px",textAlign:"center"}},t2_object["10"]);
-        dialog_change_password_button.placeAt(t2_object["11"]);
-        t2_object["12"] = domConstruct.create('tr', {},t2_object["1"]);
-        t2_object["13"] = domConstruct.create('td', {colSpan:'2',style:{textAlign:"center"}},t2_object["12"]);
-        dialog_change_password_progress.placeAt(t2_object["13"]);
-
-        registry.byId("dialog_modify_"+fn_object.rid).set("content",tab_container);
+        registry.byId("dialog_modify_"+fn_object.rid).set("content",border_container);
     }
 
     function populateModifyDialog(fn_object){
-        
+
+        const username = fn_object.cell_data.rawData["username"];
+
         // Show Dialog
         var dialog_modify = registry.byId('dialog_modify_'+fn_object.rid);
 
         if(!dialog_modify){
-            dialog_modify = createDialog({ rid: "dialog_modify_"+fn_object.rid,title: "Modify Entry"});
+            dialog_modify = createDialog({ rid: "dialog_modify_"+fn_object.rid,title: "Modify - <strong>"+username+"</strong>"});
             createModifyDialog(fn_object);
         }
 
@@ -818,31 +960,13 @@ define([
         registry.byId("dialog_modify_progress_"+fn_object.rid).set({indeterminate: false, maximum: 100, label: "",value: ""});
         domStyle.set(registry.byId("dialog_modify_progress_"+fn_object.rid).domNode, "display", "none");   
 
-        registry.byId("dialog_change_password_progress_"+fn_object.rid).set({indeterminate: false, maximum: 100, label: "",value: ""});
-        domStyle.set(registry.byId("dialog_change_password_progress_"+fn_object.rid).domNode, "display", "none");   
-
         registry.byId("dialog_modify_form_"+fn_object.rid+"_new_password").set("value",null);
         registry.byId("dialog_modify_form_"+fn_object.rid+"_confirm_new_password").set("value",null);
 
-        xhr.get(main_uri+"/user_manager/"+fn_object.rid, {
-            handleAs: "json",
-            timeout: 5000,
-            preventCache: false
-        }).then(function(json_text){
-
-            const json_obj = json_text[0];
-
-            registry.byId("dialog_modify_form_"+fn_object.rid+"_username").set("value",json_obj["username"]);
-            registry.byId("dialog_modify_form_"+fn_object.rid+"_real_name").set("value",json_obj["real_name"]);
-            //registry.byId("dialog_modify_form_"+fn_object.rid+"_status").set("displayedValue",json_obj["status"]);
-            registry.byId("dialog_modify_form_"+fn_object.rid+"_status").set("checked",json_obj["status_boolean"]);
-            registry.byId("dialog_modify_form_"+fn_object.rid+"_privilege").set("displayedValue",json_obj["privilege"]);
-            registry.byId("dialog_modify_form_"+fn_object.rid+"_department").set("displayedValue",json_obj["department"]);
-
-        }, function(error){
-            console.log("An error occurred: " + error);
-            return error;
-        });
+        registry.byId("dialog_modify_form_"+fn_object.rid+"_username").set("value",fn_object.cell_data.rawData["username"]);
+        registry.byId("dialog_modify_form_"+fn_object.rid+"_real_name").set("value",fn_object.cell_data.rawData["real_name"]);
+        registry.byId("dialog_modify_form_"+fn_object.rid+"_status").set("displayedValue",fn_object.cell_data.rawData["status"]);
+        registry.byId("dialog_modify_form_"+fn_object.rid+"_department").set("displayedValue",fn_object.cell_data.rawData["department"]);
     }
 
     function createFilterDialog(fn_object){
@@ -914,7 +1038,7 @@ define([
             value: "", 
             required: false, 
             placeHolder: "Filter by Department",
-            store: JsonRest({target:main_uri+"/filtering_select/department/"}),
+            store: department_store_select_cache,
             disabled: true
         });
 
@@ -967,6 +1091,28 @@ define([
                     ) 
                 );
                 cache_store.put({ id:"filter", query: query });
+            }
+        });
+
+        const dialog_filter_button2 = new Button({
+            id: "dialog_filter_button2",
+            label: "Clear",
+            onClick: function(){
+
+                cache_store.remove("filter");
+                setGridFilter('gridx_Grid_0',{});
+
+                registry.byId("dialog_filter_form_object_username_c").set("checked",false);
+                registry.byId("dialog_filter_form_object_username").set("value",null);
+
+                registry.byId("dialog_filter_form_object_real_name_c").set("checked",false);
+                registry.byId("dialog_filter_form_object_real_name").set("value",null);
+
+                registry.byId("dialog_filter_form_object_status_c").set("checked",false);
+                registry.byId("dialog_filter_form_object_status").set("displayedValue",null);
+
+                registry.byId("dialog_filter_form_object_department_c").set("checked",false);
+                registry.byId("dialog_filter_form_object_department").set("displayedValue",null);
             }
         });
 
@@ -1035,8 +1181,9 @@ define([
         registry.byId("dialog_filter_form_object_department").placeAt(required_object["department_4"]);
 
         cp_object["7"] = domConstruct.create('tr', {},cp_object["1"]);
-        cp_object["8"] = domConstruct.create('td', {colSpan:'3',style:{textAlign:"center"}},cp_object["7"]);
+        cp_object["8"] = domConstruct.create('td', {colSpan:'3',style:{padding:"10px 0 5px 0",textAlign:"center"}},cp_object["7"]);
         dialog_filter_button1.placeAt(cp_object["8"]);
+        dialog_filter_button2.placeAt(cp_object["8"]);
 
         registry.byId("dialog_filter").set("content",content_pane);
     }
@@ -1193,8 +1340,11 @@ define([
         // Tab 1
         const t1 = new TabContainer({title:"Selects/Drop-Down",doLayout:true, tabPosition:"left-h", tabStrip:true,style:"padding:5px"}).placeAt(tc);
 
-        const c1 = new ContentPane({title:"Department"}).placeAt(t1);
-        createGrid({id:"department",store:JsonRest({target:main_uri+"/admin_grid/department"}),container:c1,name:"Department"});
+        const c1 = new ContentPane({title:"Application"}).placeAt(t1);
+        createGrid({id:"group_manager",store:JsonRest({target:main_uri+"/admin_grid/group_manager"}),container:c1,name:"Application"});
+
+        const c2 = new ContentPane({title:"Department"}).placeAt(t1);
+        createGrid({id:"department",store:JsonRest({target:main_uri+"/admin_grid/department"}),container:c2,name:"Department"});
 
         registry.byId("dialog_admin").set("content",tc);
     }
@@ -1214,7 +1364,7 @@ define([
     function createServiceTab(fn_object) {
 
         const grid_layout = [
-            { name:"--", field:"id", width: "50px", style: "font-size: 8pt;text-align:center;",
+            { name:"--", field:"id", style: "font-size: 8pt;text-align:center;",
                 widgetsInCell: true,
                 decorator: function(){
                     declare("manage_link", [_WidgetBase], {
@@ -1233,21 +1383,15 @@ define([
                     ];
                 }
             },
-            {name:"Status", field:"status_boolean", width: "55px", style: "text-align:center;", editable: true,alwaysEditing: true,
-                editor: "dijit.form.CheckBox",
-                editorArgs: {
-                    props: 'value: true'
-                }
-            },
-            {name:"Username", field:"username", width: "100px", style: "text-align:center;", editable: true},
-            {name:"Real Name", field:"real_name", width: "125px", style: "text-align:center;", editable: true},
+            {name:"Username", field:"username", style: "text-align:center;", editable: true},
+            {name:"Real Name", field:"real_name", style: "text-align:center;", editable: true},
             {
-                name:"Privilege", field:"privilege", width: "80px", style: "text-align:center;", editable: true,
+                name: "Status", field:"status",style: "text-align:center;", editable: true,
                 editor: FilteringSelect,
                 editorArgs: {
-                    props: 'store: privilege_store',
+                    props: 'store: status_store',
                     fromEditor: function(valueInEditor, cell){
-                        var obj = privilege_store.get(valueInEditor);
+                        const obj = status_store.get(valueInEditor);
                         return obj.name;
                     },
                     toEditor: function(storeData, gridData, cell, editor){
@@ -1255,10 +1399,10 @@ define([
                     }
                 }
             },
-            {name:"Created", field:"created", width: "125px", style: "text-align:center;"},
-            {name:"Updated", field:"updated", width: "125px", style: "text-align:center;"},
+            {name:"Created", field:"created", style: "text-align:center;"},
+            {name:"Updated", field:"updated", style: "text-align:center;"},
             {
-                name: "Department", field:"department", width: "auto", style: "text-align:center;", editable: true,
+                name: "Department", field:"department", style: "text-align:center;", editable: true,
                 editor: FilteringSelect,
                 editorArgs: {
                     props: 'store: department_store_select_cache',
@@ -1282,8 +1426,9 @@ define([
             structure: grid_layout,
             query: fn_object.query,
             selectRowTriggerOnCell: true,
-            paginationBarMessage: "${2} to ${3} of <span style='font-size:12pt;color:red'><strong>${0}</strong></span> items ${1} items selected",
+            paginationBarMessage: "${2} to ${3} of <span style='font-size:11pt'><strong>${0}</strong></span> items",
             filterServerMode: true,
+            columnWidthAutoResize: true,
             filterSetupFilterQuery: function(expr){
                 if(fn_object.query){
                     const s = lang.clone(fn_object.query);
@@ -1296,9 +1441,6 @@ define([
                     }
                 }
             },
-            //barBottom: [
-            //    {pluginClass: "gridx/support/Summary"}
-            //],
             modules: [
                 "gridx/modules/Filter",
                 "gridx/modules/VirtualVScroller",
